@@ -14,6 +14,7 @@ export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([])
   const [deliveryData, setDeliveryData] = useState(null)
   const [paymentData, setPaymentData] = useState(null)
+  const [orderData, setOrderData] = useState(null)
 
   const addToCart = (product, restaurant) => {
     setCartItems(prev => {
@@ -64,6 +65,8 @@ export const CartProvider = ({ children }) => {
         setDeliveryData,
         paymentData,
         setPaymentData,
+        orderData,
+        setOrderData,
       }}
     >
       {children}

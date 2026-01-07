@@ -87,10 +87,13 @@ const Button = styled.button`
 
 const Confirmation = () => {
   const navigate = useNavigate()
-  const { cartItems, deliveryData, paymentData, getTotalPrice, clearCart } = useCart()
+  const { orderData, clearCart } = useCart()
 
   const formatPrice = (price) => {
-    return `R$ ${price.toFixed(2).replace('.', ',')}`
+    if (typeof price === 'number') {
+      return `R$ ${price.toFixed(2).replace('.', ',')}`
+    }
+    return price || 'R$ 0,00'
   }
 
   const handleNewOrder = () => {
@@ -98,7 +101,7 @@ const Confirmation = () => {
     navigate('/')
   }
 
-  if (cartItems.length === 0 || !deliveryData || !paymentData) {
+  if (!orderData) {
     return (
       <Container>
         <MainContent>
@@ -109,6 +112,14 @@ const Confirmation = () => {
     )
   }
 
+  // Extrair dados da resposta da API
+  const orderId = orderData.orderId || orderData.id || 'N/A'
+  const deliveryTime = orderData.deliveryTime || orderData.previsaoEntrega || '30 - 40 minutos'
+  const total = orderData.total || orderData.totalPrice || 0
+  const items = orderData.items || orderData.products || []
+  const deliveryInfo = orderData.delivery || {}
+  const address = deliveryInfo.address || {}
+
   return (
     <Container>
       <MainContent>
@@ -118,22 +129,53 @@ const Confirmation = () => {
             Estamos felizes em informar que seu pedido já está em processo de preparação e, em breve, será entregue no endereço fornecido.
           </Message>
           <OrderInfo>
-            <InfoRow>
-              <span>Gênero de prato:</span>
-              <span>Italiana</span>
-            </InfoRow>
+            {orderData.restaurant && (
+              <InfoRow>
+                <span>Restaurante:</span>
+                <span>{orderData.restaurant}</span>
+              </InfoRow>
+            )}
+            {orderData.category && (
+              <InfoRow>
+                <span>Gênero de prato:</span>
+                <span>{orderData.category}</span>
+              </InfoRow>
+            )}
             <InfoRow>
               <span>Pedido:</span>
-              <span>{cartItems.length} item(s)</span>
+              <span>{items.length} item(s)</span>
             </InfoRow>
+            {deliveryInfo.receiver && (
+              <InfoRow>
+                <span>Entregar para:</span>
+                <span>{deliveryInfo.receiver}</span>
+              </InfoRow>
+            )}
+            {address.description && (
+              <InfoRow>
+                <span>Endereço:</span>
+                <span>
+                  {address.description}, {address.number || ''}
+                  {address.complement ? ` - ${address.complement}` : ''}
+                  {address.city ? `, ${address.city}` : ''}
+                  {address.zipCode ? ` - CEP: ${address.zipCode}` : ''}
+                </span>
+              </InfoRow>
+            )}
+            {orderId && orderId !== 'N/A' && (
+              <InfoRow>
+                <span>Número do pedido:</span>
+                <span>{orderId}</span>
+              </InfoRow>
+            )}
             <InfoRow>
               <span>Total:</span>
-              <span>{formatPrice(getTotalPrice())}</span>
+              <span>{formatPrice(total)}</span>
             </InfoRow>
           </OrderInfo>
           <Message>
             Previsão de entrega:<br />
-            <strong>30 - 40 minutos</strong>
+            <strong>{deliveryTime}</strong>
           </Message>
           <Button onClick={handleNewOrder}>Concluir</Button>
         </ConfirmationMessage>

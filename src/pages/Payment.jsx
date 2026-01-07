@@ -78,11 +78,32 @@ const Button = styled.button`
   &:hover {
     background-color: #d45555;
   }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`
+
+const LoadingMessage = styled.div`
+  text-align: center;
+  padding: 16px;
+  color: var(--primary-color);
+  font-size: 14px;
+`
+
+const ErrorMessage = styled.div`
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
 `
 
 const Payment = () => {
   const navigate = useNavigate()
-  const { setPaymentData, cartItems, deliveryData } = useCart()
+  const { setPaymentData, cartItems, deliveryData, setOrderData } = useCart()
   const [formData, setFormData] = useState({
     nome: '',
     numero: '',
@@ -90,6 +111,9 @@ const Payment = () => {
     mes: '',
     ano: '',
   })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -97,10 +121,68 @@ const Payment = () => {
     })
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    setPaymentData(formData)
-    navigate('/confirmacao')
+    setError(null)
+    setLoading(true)
+
+    try {
+      // Preparar dados no formato esperado pela API
+      const checkoutData = {
+        products: cartItems.map(item => ({
+          id: item.id,
+          price: item.preco,
+        })),
+        delivery: {
+          receiver: deliveryData.nome,
+          address: {
+            description: deliveryData.endereco,
+            city: deliveryData.cidade,
+            zipCode: deliveryData.cep,
+            number: parseInt(deliveryData.numero) || 0,
+            complement: deliveryData.complemento || '',
+          },
+        },
+        payment: {
+          card: {
+            name: formData.nome,
+            number: formData.numero,
+            code: parseInt(formData.cvv) || 0,
+            expires: {
+              month: parseInt(formData.mes) || 0,
+              year: parseInt(formData.ano) || 0,
+            },
+          },
+        },
+      }
+
+      // Fazer POST para a API
+      const response = await fetch('https://api-ebac.vercel.app/api/efood/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(checkoutData),
+      })
+
+      if (!response.ok) {
+        throw new Error('Erro ao processar o pedido')
+      }
+
+      const orderResponse = await response.json()
+      
+      // Salvar dados do pedido e pagamento
+      setPaymentData(formData)
+      setOrderData(orderResponse)
+      
+      // Navegar para a página de confirmação
+      navigate('/confirmacao')
+    } catch (err) {
+      console.error('Erro ao processar checkout:', err)
+      setError('Erro ao processar o pedido. Tente novamente.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (cartItems.length === 0 || !deliveryData) {
@@ -118,6 +200,7 @@ const Payment = () => {
     <Container>
       <MainContent>
         <Title>Pagamento</Title>
+        {error && <ErrorMessage>{error}</ErrorMessage>}
         <Form onSubmit={handleSubmit}>
           <FormGroup>
             <Label>Nome no cartão</Label>
@@ -127,6 +210,7 @@ const Payment = () => {
               value={formData.nome}
               onChange={handleChange}
               required
+              disabled={loading}
             />
           </FormGroup>
           <FormGroup>
@@ -138,6 +222,7 @@ const Payment = () => {
               onChange={handleChange}
               required
               maxLength={16}
+              disabled={loading}
             />
           </FormGroup>
           <Row>
@@ -150,6 +235,7 @@ const Payment = () => {
                 onChange={handleChange}
                 required
                 maxLength={3}
+                disabled={loading}
               />
             </FormGroup>
             <FormGroup>
@@ -162,6 +248,7 @@ const Payment = () => {
                 required
                 maxLength={2}
                 placeholder="MM"
+                disabled={loading}
               />
             </FormGroup>
             <FormGroup>
@@ -174,10 +261,14 @@ const Payment = () => {
                 required
                 maxLength={4}
                 placeholder="AAAA"
+                disabled={loading}
               />
             </FormGroup>
           </Row>
-          <Button type="submit">Finalizar pagamento</Button>
+          {loading && <LoadingMessage>Processando pedido...</LoadingMessage>}
+          <Button type="submit" disabled={loading}>
+            {loading ? 'Processando...' : 'Finalizar pagamento'}
+          </Button>
         </Form>
       </MainContent>
     </Container>
