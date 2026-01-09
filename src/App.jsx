@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
 import { CartProvider } from './contexts/CartContext'
 import Header from './components/Header'
 import Home from './pages/Home'
@@ -10,22 +10,34 @@ import Confirmation from './pages/Confirmation'
 import Cart from './components/Cart'
 import GlobalStyle from './styles/GlobalStyle'
 
-function App() {
+function AppRoutes() {
+  const location = useLocation()
   const [cartOpen, setCartOpen] = useState(false)
+  
+  // Não mostrar header normal nas páginas de checkout (elas têm CheckoutHeader próprio)
+  const isCheckoutPage = ['/entrega', '/pagamento', '/confirmacao'].includes(location.pathname)
 
+  return (
+    <>
+      {!isCheckoutPage && <Header onCartClick={() => setCartOpen(true)} />}
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/restaurante/:id" element={<RestaurantDetail />} />
+        <Route path="/entrega" element={<Delivery />} />
+        <Route path="/pagamento" element={<Payment />} />
+        <Route path="/confirmacao" element={<Confirmation />} />
+      </Routes>
+      {!isCheckoutPage && <Cart isOpen={cartOpen} onClose={() => setCartOpen(false)} />}
+    </>
+  )
+}
+
+function App() {
   return (
     <CartProvider>
       <GlobalStyle />
       <Router>
-        <Header onCartClick={() => setCartOpen(true)} />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/restaurante/:id" element={<RestaurantDetail />} />
-          <Route path="/entrega" element={<Delivery />} />
-          <Route path="/pagamento" element={<Payment />} />
-          <Route path="/confirmacao" element={<Confirmation />} />
-        </Routes>
-        <Cart isOpen={cartOpen} onClose={() => setCartOpen(false)} />
+        <AppRoutes />
       </Router>
     </CartProvider>
   )

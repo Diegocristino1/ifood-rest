@@ -22,7 +22,7 @@ export const CartProvider = ({ children }) => {
       if (existingItem) {
         return prev.map(item =>
           item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: (item.quantity || 0) + 1 }
             : item
         )
       }
@@ -35,13 +35,22 @@ export const CartProvider = ({ children }) => {
   }
 
   const updateQuantity = (id, quantity) => {
-    if (quantity <= 0) {
+    const newQuantity = Math.max(0, Math.floor(quantity || 0))
+    
+    if (newQuantity <= 0) {
       removeFromCart(id)
       return
     }
-    setCartItems(prev =>
-      prev.map(item => (item.id === id ? { ...item, quantity } : item))
-    )
+    
+    setCartItems(prev => {
+      const itemExists = prev.find(item => item.id === id)
+      if (!itemExists) {
+        return prev
+      }
+      return prev.map(item => 
+        item.id === id ? { ...item, quantity: newQuantity } : item
+      )
+    })
   }
 
   const clearCart = () => {
@@ -49,7 +58,11 @@ export const CartProvider = ({ children }) => {
   }
 
   const getTotalPrice = () => {
-    return cartItems.reduce((total, item) => total + item.preco * item.quantity, 0)
+    return cartItems.reduce((total, item) => total + (item.preco || 0) * (item.quantity || 0), 0)
+  }
+
+  const getTotalItems = () => {
+    return cartItems.reduce((total, item) => total + (item.quantity || 0), 0)
   }
 
   return (
@@ -61,6 +74,7 @@ export const CartProvider = ({ children }) => {
         updateQuantity,
         clearCart,
         getTotalPrice,
+        getTotalItems,
         deliveryData,
         setDeliveryData,
         paymentData,

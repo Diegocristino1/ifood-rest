@@ -27,13 +27,14 @@ const ModalOverlay = styled.div`
 
 const ModalContent = styled.div`
   background-color: var(--white);
-  padding: 32px;
   border-radius: 8px;
   max-width: 1024px;
   width: 90%;
   max-height: 90vh;
-  overflow-y: auto;
+  overflow: hidden;
   position: relative;
+  display: flex;
+  flex-direction: column;
   animation: slideIn 0.3s;
 
   @keyframes slideIn {
@@ -48,18 +49,38 @@ const ModalContent = styled.div`
   }
 `
 
+const ModalHeader = styled.div`
+  background-color: var(--primary-color);
+  color: var(--white);
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`
+
+const ModalHeaderTitle = styled.h2`
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--white);
+  margin: 0;
+`
+
+const ModalBodyContainer = styled.div`
+  padding: 32px;
+  overflow-y: auto;
+  flex: 1;
+`
+
 const CloseButton = styled.span`
-  position: absolute;
-  right: 16px;
-  top: 16px;
   font-size: 32px;
   font-weight: bold;
-  color: var(--text-color);
+  color: var(--white);
   cursor: pointer;
-  transition: color 0.3s;
+  transition: opacity 0.3s;
+  line-height: 1;
 
   &:hover {
-    color: var(--primary-color);
+    opacity: 0.8;
   }
 `
 
@@ -180,46 +201,50 @@ const ProductModal = ({ product, restaurant, onClose }) => {
   return (
     <ModalOverlay onClick={handleOverlayClick}>
       <ModalContent>
-        <CloseButton onClick={onClose}>&times;</CloseButton>
-        <ModalBody>
-          <ImageContainer>
-            <ProductImage
-              src={product.foto || 'https://via.placeholder.com/280x280?text=Produto'}
-              alt={product.nome}
-              onError={(e) => {
-                e.target.src = 'https://via.placeholder.com/280x280?text=Produto'
-              }}
-            />
-          </ImageContainer>
-          <ContentContainer>
-            <Title>{product.nome}</Title>
-            <Description>{product.descricao || 'Sem descrição disponível.'}</Description>
-            <Details>
-              <Detail>
-                <DetailLabel>Restaurante</DetailLabel>
-                <DetailValue>{restaurant.titulo}</DetailValue>
-              </Detail>
-              <Detail>
-                <DetailLabel>Preço</DetailLabel>
-                <DetailValue>{formatPrice(product.preco || 0)}</DetailValue>
-              </Detail>
-              {product.porcao && (
+        <ModalHeader>
+          <ModalHeaderTitle>{product.nome}</ModalHeaderTitle>
+          <CloseButton onClick={onClose}>&times;</CloseButton>
+        </ModalHeader>
+        <ModalBodyContainer>
+          <ModalBody>
+            <ImageContainer>
+              <ProductImage
+                src={product.foto || 'https://via.placeholder.com/280x280?text=Produto'}
+                alt={product.nome}
+                onError={(e) => {
+                  e.target.src = 'https://via.placeholder.com/280x280?text=Produto'
+                }}
+              />
+            </ImageContainer>
+            <ContentContainer>
+              <Description>{product.descricao || 'Sem descrição disponível.'}</Description>
+              <Details>
                 <Detail>
-                  <DetailLabel>Porção</DetailLabel>
-                  <DetailValue>{product.porcao}</DetailValue>
+                  <DetailLabel>Restaurante</DetailLabel>
+                  <DetailValue>{restaurant.titulo}</DetailValue>
                 </Detail>
-              )}
-            </Details>
-            <Actions>
-              <Button className="primary" onClick={handleAddToCart}>
-                Adicionar ao carrinho
-              </Button>
-              <Button className="secondary" onClick={onClose}>
-                Continuar comprando
-              </Button>
-            </Actions>
-          </ContentContainer>
-        </ModalBody>
+                <Detail>
+                  <DetailLabel>Preço</DetailLabel>
+                  <DetailValue>{formatPrice(product.preco || 0)}</DetailValue>
+                </Detail>
+                {product.porcao && (
+                  <Detail>
+                    <DetailLabel>Porção</DetailLabel>
+                    <DetailValue>{product.porcao}</DetailValue>
+                  </Detail>
+                )}
+              </Details>
+              <Actions>
+                <Button className="primary" onClick={handleAddToCart}>
+                  Adicionar ao carrinho
+                </Button>
+                <Button className="secondary" onClick={onClose}>
+                  Continuar comprando
+                </Button>
+              </Actions>
+            </ContentContainer>
+          </ModalBody>
+        </ModalBodyContainer>
       </ModalContent>
     </ModalOverlay>
   )

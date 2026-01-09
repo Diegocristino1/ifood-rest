@@ -111,9 +111,22 @@ const ItemName = styled.h4`
   color: var(--primary-color);
 `
 
-const ItemPrice = styled.span`
+const ItemPrice = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   font-size: 14px;
   color: var(--primary-color);
+`
+
+const PriceUnit = styled.span`
+  font-size: 12px;
+  opacity: 0.8;
+`
+
+const PriceSubtotal = styled.span`
+  font-weight: 700;
+  font-size: 16px;
 `
 
 const ItemQuantity = styled.div`
@@ -208,11 +221,13 @@ const EmptyCart = styled.div`
 `
 
 const Cart = ({ isOpen, onClose }) => {
-  const { cartItems, removeFromCart, updateQuantity, getTotalPrice } = useCart()
+  const { cartItems, removeFromCart, updateQuantity, getTotalPrice, getTotalItems } = useCart()
   const navigate = useNavigate()
+  const totalItems = getTotalItems()
 
   const formatPrice = (price) => {
-    return `R$ ${price.toFixed(2).replace('.', ',')}`
+    const numPrice = typeof price === 'number' ? price : parseFloat(price) || 0
+    return `R$ ${numPrice.toFixed(2).replace('.', ',')}`
   }
 
   const handleCheckout = () => {
@@ -233,8 +248,10 @@ const Cart = ({ isOpen, onClose }) => {
       <CartOverlay isOpen={isOpen} onClick={handleOverlayClick} />
       <CartSidebar isOpen={isOpen}>
         <CartHeader>
-          <CartTitle>Carrinho</CartTitle>
-          <CloseButton onClick={onClose}>&times;</CloseButton>
+          <CartTitle>
+            Carrinho {totalItems > 0 && `(${totalItems} ${totalItems === 1 ? 'item' : 'itens'})`}
+          </CartTitle>
+          <CloseButton onClick={onClose} aria-label="Fechar carrinho">&times;</CloseButton>
         </CartHeader>
         <CartItems>
           {cartItems.length === 0 ? (
@@ -251,13 +268,24 @@ const Cart = ({ isOpen, onClose }) => {
                 />
                 <ItemInfo>
                   <ItemName>{item.nome}</ItemName>
-                  <ItemPrice>{formatPrice(item.preco)}</ItemPrice>
+                  <ItemPrice>
+                    <PriceUnit>{formatPrice(item.preco)} cada</PriceUnit>
+                    <PriceSubtotal>
+                      {formatPrice((item.preco || 0) * (item.quantity || 0))}
+                    </PriceSubtotal>
+                  </ItemPrice>
                   <ItemQuantity>
-                    <QuantityButton onClick={() => updateQuantity(item.id, item.quantity - 1)}>
+                    <QuantityButton 
+                      onClick={() => updateQuantity(item.id, (item.quantity || 0) - 1)}
+                      aria-label="Diminuir quantidade"
+                    >
                       -
                     </QuantityButton>
-                    <QuantityValue>{item.quantity}</QuantityValue>
-                    <QuantityButton onClick={() => updateQuantity(item.id, item.quantity + 1)}>
+                    <QuantityValue>{item.quantity || 0}</QuantityValue>
+                    <QuantityButton 
+                      onClick={() => updateQuantity(item.id, (item.quantity || 0) + 1)}
+                      aria-label="Aumentar quantidade"
+                    >
                       +
                     </QuantityButton>
                   </ItemQuantity>

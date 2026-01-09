@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
+import { useCart } from '../contexts/CartContext'
 
 const HeaderContainer = styled.header`
   background-color: var(--primary-color);
@@ -55,13 +56,35 @@ const CartButton = styled.button`
   font-weight: 400;
   cursor: pointer;
   transition: opacity 0.3s;
+  position: relative;
+  padding: 8px 16px;
 
   &:hover {
     opacity: 0.8;
   }
 `
 
+const CartBadge = styled.span`
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: var(--secondary-color);
+  color: var(--primary-color);
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+`
+
 const Header = ({ onCartClick }) => {
+  const { getTotalItems } = useCart()
+  const totalItems = getTotalItems()
+
   return (
     <HeaderContainer>
       <Container>
@@ -70,7 +93,10 @@ const Header = ({ onCartClick }) => {
           <Nav>
             <NavLink to="/">Restaurantes</NavLink>
             <NavLink to="/">Sobre</NavLink>
-            <CartButton onClick={onCartClick}>Carrinho</CartButton>
+            <CartButton onClick={onCartClick}>
+              Carrinho
+              {totalItems > 0 && <CartBadge>{totalItems}</CartBadge>}
+            </CartButton>
           </Nav>
         </HeaderContent>
       </Container>

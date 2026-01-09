@@ -18,11 +18,28 @@ const SectionTitle = styled.h2`
 
 const RestaurantsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: 2fr 1fr;
   gap: 32px;
 
-  @media (max-width: 768px) {
+  @media (max-width: 1024px) {
     grid-template-columns: 1fr;
+  }
+`
+
+const LeftColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+`
+
+const RightColumn = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-content: start;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   }
 `
 
@@ -71,21 +88,36 @@ const Home = () => {
     fetchRestaurantes()
   }, [])
 
+  // Dividir restaurantes: 3 primeiros à esquerda, resto à direita
+  const leftRestaurants = restaurantes.slice(0, 3)
+  const rightRestaurants = restaurantes.slice(3, 7)
+
   return (
     <>
       <Hero />
       <Container>
         <SectionTitle>Restaurantes</SectionTitle>
-        <RestaurantsGrid>
-          {loading && <Loading>Carregando restaurantes...</Loading>}
-          {error && <Error>Erro ao carregar restaurantes. Tente novamente mais tarde.</Error>}
-          {!loading && !error && restaurantes.length === 0 && (
-            <Error>Nenhum restaurante encontrado.</Error>
-          )}
-          {!loading && !error && restaurantes.map(restaurante => (
-            <RestaurantCard key={restaurante.id} restaurant={restaurante} />
-          ))}
-        </RestaurantsGrid>
+        {loading && <Loading>Carregando restaurantes...</Loading>}
+        {error && <Error>Erro ao carregar restaurantes. Tente novamente mais tarde.</Error>}
+        {!loading && !error && restaurantes.length === 0 && (
+          <Error>Nenhum restaurante encontrado.</Error>
+        )}
+        {!loading && !error && restaurantes.length > 0 && (
+          <RestaurantsGrid>
+            <LeftColumn>
+              {leftRestaurants.map(restaurante => (
+                <RestaurantCard key={restaurante.id} restaurant={restaurante} />
+              ))}
+            </LeftColumn>
+            {rightRestaurants.length > 0 && (
+              <RightColumn>
+                {rightRestaurants.map(restaurante => (
+                  <RestaurantCard key={restaurante.id} restaurant={restaurante} />
+                ))}
+              </RightColumn>
+            )}
+          </RestaurantsGrid>
+        )}
       </Container>
     </>
   )

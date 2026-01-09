@@ -2,17 +2,40 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 import { useCart } from '../contexts/CartContext'
+import CheckoutHeader from '../components/CheckoutHeader'
+
 const Container = styled.div`
   display: flex;
   min-height: calc(100vh - 80px);
+  background-color: rgba(0, 0, 0, 0.4);
 `
 
 const MainContent = styled.main`
   flex: 1;
   padding: 32px;
-  background-color: var(--bg-color);
-  max-width: 1024px;
-  margin: 0 auto;
+  background-color: rgba(0, 0, 0, 0.4);
+  position: relative;
+`
+
+const Sidebar = styled.aside`
+  width: 360px;
+  background-color: var(--primary-color);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.2);
+
+  @media (max-width: 768px) {
+    display: none;
+  }
+`
+
+const SidebarField = styled.div`
+  background-color: var(--white);
+  min-height: 40px;
+  border-radius: 8px;
+  width: 100%;
 `
 
 const Title = styled.h2`
@@ -24,6 +47,10 @@ const Title = styled.h2`
 
 const Form = styled.form`
   max-width: 600px;
+  background-color: var(--white);
+  padding: 32px;
+  border-radius: 8px;
+  margin: 0 auto;
 `
 
 const FormGroup = styled.div`
@@ -187,21 +214,28 @@ const Payment = () => {
 
   if (cartItems.length === 0 || !deliveryData) {
     return (
-      <Container>
-        <MainContent>
-          <Title>Complete o pedido anterior</Title>
-          <Button onClick={() => navigate('/entrega')}>Voltar para entrega</Button>
-        </MainContent>
-      </Container>
+      <>
+        <CheckoutHeader />
+        <Container>
+          <MainContent>
+            <Form>
+              <Title>Complete o pedido anterior</Title>
+              <Button onClick={() => navigate('/entrega')}>Voltar para entrega</Button>
+            </Form>
+          </MainContent>
+        </Container>
+      </>
     )
   }
 
   return (
-    <Container>
-      <MainContent>
-        <Title>Pagamento</Title>
-        {error && <ErrorMessage>{error}</ErrorMessage>}
-        <Form onSubmit={handleSubmit}>
+    <>
+      <CheckoutHeader />
+      <Container>
+        <MainContent>
+          <Form onSubmit={handleSubmit}>
+            <Title>Pagamento</Title>
+            {error && <ErrorMessage>{error}</ErrorMessage>}
           <FormGroup>
             <Label>Nome no cartão</Label>
             <Input
@@ -266,12 +300,40 @@ const Payment = () => {
             </FormGroup>
           </Row>
           {loading && <LoadingMessage>Processando pedido...</LoadingMessage>}
-          <Button type="submit" disabled={loading}>
-            {loading ? 'Processando...' : 'Finalizar pagamento'}
-          </Button>
-        </Form>
-      </MainContent>
-    </Container>
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Processando...' : 'Finalizar pagamento'}
+            </Button>
+          </Form>
+        </MainContent>
+        <Sidebar>
+          {deliveryData && (
+            <>
+              <SidebarField style={{ height: deliveryData.nome ? 'auto' : '40px', padding: deliveryData.nome ? '8px' : '0' }}>
+                {deliveryData.nome && <div style={{ color: 'var(--primary-color)', fontSize: '14px', fontWeight: '700' }}>Entrega para: {deliveryData.nome}</div>}
+              </SidebarField>
+              <SidebarField style={{ height: deliveryData.endereco ? 'auto' : '40px', padding: deliveryData.endereco ? '8px' : '0' }}>
+                {deliveryData.endereco && <div style={{ color: 'var(--primary-color)', fontSize: '14px' }}>{deliveryData.endereco}</div>}
+              </SidebarField>
+              <SidebarField style={{ height: deliveryData.cidade || deliveryData.cep || deliveryData.numero ? 'auto' : '40px', padding: deliveryData.cidade || deliveryData.cep || deliveryData.numero ? '8px' : '0' }}>
+                {(deliveryData.cidade || deliveryData.cep || deliveryData.numero) && (
+                  <div style={{ color: 'var(--primary-color)', fontSize: '14px' }}>
+                    {deliveryData.cidade && `${deliveryData.cidade} - `}
+                    {deliveryData.cep && `CEP: ${deliveryData.cep} - `}
+                    {deliveryData.numero && `Nº ${deliveryData.numero}`}
+                  </div>
+                )}
+              </SidebarField>
+            </>
+          )}
+          <SidebarField style={{ height: formData.nome ? 'auto' : '40px', padding: formData.nome ? '8px' : '0' }}>
+            {formData.nome && <div style={{ color: 'var(--primary-color)', fontSize: '14px', fontWeight: '700' }}>Cartão: {formData.nome}</div>}
+          </SidebarField>
+          <SidebarField style={{ height: formData.numero ? 'auto' : '40px', padding: formData.numero ? '8px' : '0' }}>
+            {formData.numero && <div style={{ color: 'var(--primary-color)', fontSize: '14px' }}>**** **** **** {formData.numero.slice(-4)}</div>}
+          </SidebarField>
+        </Sidebar>
+      </Container>
+    </>
   )
 }
 
